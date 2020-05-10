@@ -6,8 +6,11 @@ fn main() {
 
     std::io::stdout().write_fmt(format_args!("P3\n{} {}\n255\n", IMAGE_WIDTH, IMAGE_HEIGHT));
 
-    for i in (0..IMAGE_HEIGHT).rev() {
-        for j in 0..IMAGE_WIDTH {
+    for j in (0..IMAGE_HEIGHT).rev() {
+        std::io::stderr().write_fmt(format_args!("\rScanlines remaining {}", j));
+        std::io::stderr().flush();
+
+        for i in 0..IMAGE_WIDTH {
             let r = i as f64 / ((IMAGE_WIDTH - 1) as f64);
             let g = j as f64 / ((IMAGE_HEIGHT - 1) as f64);
             let b = 0.25;
@@ -19,4 +22,5 @@ fn main() {
             std::io::stdout().write_fmt(format_args!("{} {} {}\n", ir, ig, ib));
         }
     }
+    std::io::stdout().write_fmt(format_args!("\nDone.\n"));
 }
