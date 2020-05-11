@@ -29,6 +29,24 @@ impl Vec3 {
     fn len_sqr(&self) -> f64 {
         self.e[0].powi(2) + self.e[1].powi(2) + self.e[2].powi(2)
     }
+
+    fn dot(&self, o: &Vec3) -> f64 {
+        self.e[0] * o.e[0] + self.e[1] * o.e[1] + self.e[2] * o.e[2]
+    }
+
+    fn cross(&self, o: &Vec3) -> Vec3 {
+        let e = [
+            self.e[1] * o.e[2] - self.e[2] - o.e[1],
+            self.e[2] * o.e[0] - self.e[0] - o.e[2],
+            self.e[0] - o.e[1] - self.e[1] - o.e[0],
+        ];
+
+        Vec3 { e }
+    }
+
+    fn unit(&self) -> Vec3 {
+        self / self.len()
+    }
 }
 
 impl From<(f64, f64, f64)> for Vec3 {
@@ -47,7 +65,6 @@ impl std::ops::Neg for Vec3 {
             e: [-&self.x(), -&self.y(), -&self.z()],
         }
     }
-
 }
 
 impl std::ops::Index<usize> for Vec3 {
@@ -64,11 +81,64 @@ impl std::ops::IndexMut<usize> for Vec3 {
     }
 }
 
-impl std::ops::AddAssign for Vec3 {
-    fn add_assign(&mut self, other: Self) {
-        self.e[0] += other.e[0];
-        self.e[1] += other.e[1];
-        self.e[2] += other.e[2];
+impl std::ops::Add for Vec3 {
+    type Output = Vec3;
+
+    fn add(self, o: Vec3) -> Self::Output {
+        let e = (self.e[0] + o.e[0], self.e[1] + o.e[1], self.e[2] + o.e[2]);
+        Vec3::from(e)
+    }
+}
+
+impl std::ops::Sub for Vec3 {
+    type Output = Vec3;
+
+    fn sub(self, o: Vec3) -> Self::Output {
+        let e = (self.e[0] - o.e[0], self.e[1] - o.e[1], self.e[2] - o.e[2]);
+        Vec3::from(e)
+    }
+}
+
+impl std::ops::Mul for Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, o: Vec3) -> Self::Output {
+        let e = (self.e[0] * o.e[0], self.e[1] * o.e[1], self.e[2] * o.e[2]);
+        Vec3::from(e)
+    }
+}
+
+impl std::ops::Mul<f64> for Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, o: f64) -> Self::Output {
+        let e = (self.e[0] * o, self.e[1] * o, self.e[2] * o);
+        Vec3::from(e)
+    }
+}
+
+impl std::ops::Mul<f64> for &Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, o: f64) -> Self::Output {
+        let e = (self.e[0] * o, self.e[1] * o, self.e[2] * o);
+        Vec3::from(e)
+    }
+}
+
+impl std::ops::Div<f64> for Vec3 {
+    type Output = Vec3;
+
+    fn div(self, o: f64) -> Self::Output {
+        self * (1.0 / o)
+    }
+}
+
+impl std::ops::Div<f64> for &Vec3 {
+    type Output = Vec3;
+
+    fn div(self, o: f64) -> Self::Output {
+        self * (1.0 / o)
     }
 }
 
@@ -77,6 +147,14 @@ impl std::ops::MulAssign<f64> for Vec3 {
         self.e[0] *= other;
         self.e[1] *= other;
         self.e[2] *= other;
+    }
+}
+
+impl std::ops::AddAssign for Vec3 {
+    fn add_assign(&mut self, other: Self) {
+        self.e[0] += other.e[0];
+        self.e[1] += other.e[1];
+        self.e[2] += other.e[2];
     }
 }
 
@@ -92,6 +170,12 @@ impl std::ops::DivAssign<f64> for Vec3 {
     fn div_assign(&mut self, other: f64) {
         let mut x = self;
         x *= 1.0 / other;
+    }
+}
+
+impl std::fmt::Display for Vec3 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} {} {}", self.e[0], self.e[1], self.e[2])
     }
 }
 
