@@ -182,6 +182,15 @@ impl std::fmt::Display for Vec3 {
 type Point3 = Vec3;
 type Color = Vec3;
 
+fn write_color(out: &mut std::io::Write, pixel_color: Color) {
+    out.write_fmt(format_args!(
+        "{} {} {}\n",
+        (255.999 * pixel_color.x()) as i32,
+        (255.999 * pixel_color.y()) as i32,
+        (255.999 * pixel_color.z()) as i32
+    ));
+}
+
 fn main() {
     const IMAGE_WIDTH: i32 = 256;
     const IMAGE_HEIGHT: i32 = 256;
@@ -193,15 +202,12 @@ fn main() {
         std::io::stderr().flush();
 
         for i in 0..IMAGE_WIDTH {
-            let r = i as f64 / ((IMAGE_WIDTH - 1) as f64);
-            let g = j as f64 / ((IMAGE_HEIGHT - 1) as f64);
-            let b = 0.25;
-
-            let ir = (255.999 * r) as i32;
-            let ig = (255.999 * g) as i32;
-            let ib = (255.999 * b) as i32;
-
-            std::io::stdout().write_fmt(format_args!("{} {} {}\n", ir, ig, ib));
+            let pixel_color = Color::from((
+                i as f64 / ((IMAGE_WIDTH - 1) as f64), 
+                j as f64 / ((IMAGE_HEIGHT - 1) as f64), 
+                0.25
+            ));
+            write_color(&mut std::io::stdout(), pixel_color)
         }
     }
     std::io::stdout().write_fmt(format_args!("\nDone.\n"));
