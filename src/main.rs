@@ -258,7 +258,7 @@ fn main() {
 
     let origin = Point3::from((0.0, 0.0, 0.0));
     let horizontal = Vec3::from((4.0, 0.0, 0.0));
-    let vertical = Vec3::from((4.0, 2.25, 0.0));
+    let vertical = Vec3::from((0.0, 2.25, 0.0));
     let lower_left_corner =
         origin - horizontal / 2.0 - vertical / 2.0 - Vec3::from((0.0, 0.0, 1.0));
 
