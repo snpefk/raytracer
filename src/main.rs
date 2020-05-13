@@ -31,7 +31,9 @@ impl Vec3 {
     }
 
     fn dot(&self, o: &Vec3) -> f64 {
-        self.e[0] * o.e[0] + self.e[1] * o.e[1] + self.e[2] * o.e[2]
+        self.e[0] * o.e[0] + 
+        self.e[1] * o.e[1] + 
+        self.e[2] * o.e[2]
     }
 
     fn cross(&self, o: &Vec3) -> Vec3 {
@@ -94,6 +96,15 @@ impl std::ops::Sub for Vec3 {
     type Output = Vec3;
 
     fn sub(self, o: Vec3) -> Self::Output {
+        let e = (self.e[0] - o.e[0], self.e[1] - o.e[1], self.e[2] - o.e[2]);
+        Vec3::from(e)
+    }
+}
+
+impl std::ops::Sub<&Vec3> for Vec3 {
+    type Output = Vec3;
+
+    fn sub(self, o: &Vec3) -> Self::Output {
         let e = (self.e[0] - o.e[0], self.e[1] - o.e[1], self.e[2] - o.e[2]);
         Vec3::from(e)
     }
@@ -218,7 +229,20 @@ fn write_color(out: &mut std::io::Write, pixel_color: Color) {
     ));
 }
 
+fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> bool {
+    let oc = r.origin() - center;
+    let a = r.direction().dot(&r.direction());
+    let b = 2.0 * oc.dot(&r.direction());
+    let c = oc.dot(&oc) - radius * radius * radius;
+    let discriminant = b * b -  4.0 * a * c;
+
+    discriminant > 0.0
+}
+
 fn ray_color(r: &Ray) -> Color {
+    if hit_sphere(&Point3::from((0.0, 0.0, -1.0)), 0.5, r) {
+        return Color::from((1.0, 0.0, 0.0));
+    }
     let unit_direction = r.direction().unit();
     let t = 0.5 * (unit_direction.y() + 1.0);
 
