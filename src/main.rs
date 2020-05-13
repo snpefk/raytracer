@@ -187,7 +187,10 @@ struct Ray {
 
 impl Ray {
     fn new(origin: Point3, dir: Vec3) -> Ray {
-        Ray { origin: origin.clone(), dir: dir.clone() }
+        Ray {
+            origin: origin.clone(),
+            dir: dir.clone(),
+        }
     }
 
     fn at(&self, t: f64) -> Point3 {
@@ -215,22 +218,34 @@ fn write_color(out: &mut std::io::Write, pixel_color: Color) {
     ));
 }
 
+fn ray_color(r: &Ray) -> Color {
+    let unit_direction = r.direction().unit();
+    let t = 0.5 * (unit_direction.y() + 1.0);
+
+    Color::from((1.0, 1.0, 1.0)) * (1.0 - t) + Color::from((0.5, 0.7, 1.0)) * t
+}
+
 fn main() {
     const IMAGE_WIDTH: i32 = 256;
     const IMAGE_HEIGHT: i32 = 256;
 
     std::io::stdout().write_fmt(format_args!("P3\n{} {}\n255\n", IMAGE_WIDTH, IMAGE_HEIGHT));
 
+    let origin = Point3::from((0.0, 0.0, 0.0));
+    let horizontal = Vec3::from((4.0, 0.0, 0.0));
+    let vertical = Vec3::from((4.0, 2.25, 0.0));
+    let lower_left_corner =
+        origin - horizontal / 2.0 - vertical / 2.0 - Vec3::from((0.0, 0.0, 1.0));
+
     for j in (0..IMAGE_HEIGHT).rev() {
         std::io::stderr().write_fmt(format_args!("\rScanlines remaining {}", j));
         std::io::stderr().flush();
 
         for i in 0..IMAGE_WIDTH {
-            let pixel_color = Color::from((
-                i as f64 / ((IMAGE_WIDTH - 1) as f64),
-                j as f64 / ((IMAGE_HEIGHT - 1) as f64),
-                0.25,
-            ));
+            let u = (i as f64) / ((IMAGE_WIDTH - 1) as f64);
+            let v = (j as f64) / ((IMAGE_HEIGHT - 1) as f64);
+            let r = Ray::new(origin, lower_left_corner + horizontal * u + vertical * v);
+            let pixel_color = ray_color(&r);
             write_color(&mut std::io::stdout(), pixel_color)
         }
     }
