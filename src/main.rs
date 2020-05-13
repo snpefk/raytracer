@@ -1,6 +1,6 @@
 use std::io::{self, Write};
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 struct Vec3 {
     e: [f64; 3],
 }
@@ -179,6 +179,30 @@ impl std::fmt::Display for Vec3 {
     }
 }
 
+// TODO: repalce origin & dir with reference
+struct Ray {
+    origin: Point3,
+    dir: Vec3,
+}
+
+impl Ray {
+    fn new(origin: Point3, dir: Vec3) -> Ray {
+        Ray { origin: origin.clone(), dir: dir.clone() }
+    }
+
+    fn at(&self, t: f64) -> Point3 {
+        self.origin + self.dir * t
+    }
+
+    fn origin(&self) -> Point3 {
+        self.origin
+    }
+
+    fn direction(&self) -> Vec3 {
+        self.dir
+    }
+}
+
 type Point3 = Vec3;
 type Color = Vec3;
 
@@ -203,9 +227,9 @@ fn main() {
 
         for i in 0..IMAGE_WIDTH {
             let pixel_color = Color::from((
-                i as f64 / ((IMAGE_WIDTH - 1) as f64), 
-                j as f64 / ((IMAGE_HEIGHT - 1) as f64), 
-                0.25
+                i as f64 / ((IMAGE_WIDTH - 1) as f64),
+                j as f64 / ((IMAGE_HEIGHT - 1) as f64),
+                0.25,
             ));
             write_color(&mut std::io::stdout(), pixel_color)
         }
