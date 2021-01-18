@@ -15,26 +15,23 @@ use ray::Ray;
 use sphere::Sphere;
 use std::io::Write;
 use std::rc::Rc;
-use utility::{Color, Point3};
+use utility::{Color, Point3, clamp};
 use vec3::Vec3;
 
 use rand::Rng;
 
 fn write_color(out: &mut dyn std::io::Write, pixel_color: Color, sample_per_pixel: i32) {
-    let mut r = pixel_color.x();
-    let mut g = pixel_color.y();
-    let mut b = pixel_color.z();
-
     let scale = 1.0 / sample_per_pixel as f64;
-    r = (scale * r).sqrt();
-    g = (scale * g).sqrt();
-    b = (scale * b).sqrt();
+
+    let r = (scale * pixel_color.x()).sqrt();
+    let g = (scale * pixel_color.y()).sqrt();
+    let b = (scale * pixel_color.z()).sqrt();
 
     out.write_fmt(format_args!(
         "{} {} {}\n",
-        (256.0 * r.clamp(0.0, 0.999)) as i32,
-        (256.0 * g.clamp(0.0, 0.999)) as i32,
-        (256.0 * b.clamp(0.0, 0.999)) as i32,
+        (256.0 * clamp(r, 0.0, 0.999)) as i32,
+        (256.0 * clamp(r, 0.0, 0.999)) as i32,
+        (256.0 * clamp(r, 0.0, 0.999)) as i32,
     ));
 }
 
@@ -148,6 +145,8 @@ fn main() {
     std::io::stdout().write_fmt(format_args!("P3\n{} {}\n255\n", IMAGE_WIDTH, IMAGE_HEIGHT));
 
     let mut rng = rand::thread_rng();
+    // let mut stdout = std::io::stdout();
+    
     for j in (0..IMAGE_HEIGHT).rev() {
         std::io::stderr().write_fmt(format_args!("\rScanlines remaining {}", j));
         std::io::stderr().flush();
