@@ -8,8 +8,6 @@ use vec3::Vec3;
 
 use rand::Rng;
 
-
-
 #[derive(Debug, Default, Clone, Copy)]
 struct Ray {
     origin: Point3,
@@ -135,7 +133,7 @@ impl Lambertian {
 
 impl Material for Lambertian {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
-        let mut scatter_direction: Vec3 = rec.normal + random_unit_vector();
+        let mut scatter_direction: Vec3 = rec.normal + Vec3::random_unit_vector();
         if scatter_direction.near_zero() {
             scatter_direction = rec.normal;
         }
@@ -157,7 +155,7 @@ impl Metal {
 impl Material for Metal {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
         let reflected = Vec3::reflect(&r_in.direction(), &rec.normal);
-        let scattered = Ray::new(rec.point, reflected + self.fuzz * random_in_unit_sphere());
+        let scattered = Ray::new(rec.point, reflected + self.fuzz * Vec3::random_in_unit_sphere());
         let attenuation = self.albedo;
 
         if scattered.direction().dot(&rec.normal) > 0.0 {
