@@ -8,19 +8,7 @@ use vec3::Vec3;
 
 use rand::Rng;
 
-fn random_in_unit_sphere() -> Vec3 {
-    loop {
-        let p = Vec3::random_range(-1.0, 1.0);
-        if p.len_sqr() >= 1.0 {
-            continue;
-        }
-        return p;
-    }
-}
 
-fn random_unit_vector() -> Vec3 {
-    random_in_unit_sphere().unit()
-}
 
 #[derive(Debug, Default, Clone, Copy)]
 struct Ray {
@@ -146,21 +134,12 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(
-        &self,
-        r_in: &Ray,
-        rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut Ray,
-    ) -> bool {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
         let mut scatter_direction: Vec3 = rec.normal + random_unit_vector();
         if scatter_direction.near_zero() {
             scatter_direction = rec.normal;
         }
-        std::mem::replace(scattered, Ray::new(rec.point, scatter_direction));
-        std::mem::replace(attenuation, self.albedo.clone());
-
-        return true;
+        Some((self.albedo, Ray::new(rec.point, scatter_direction)))
     }
 }
 
@@ -176,21 +155,16 @@ impl Metal {
 }
 
 impl Material for Metal {
-    fn scatter(
-        &self,
-        r_in: &Ray,
-        rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut Ray,
-    ) -> bool {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
         let reflected = Vec3::reflect(&r_in.direction(), &rec.normal);
-        std::mem::replace(
-            scattered,
-            Ray::new(rec.point, reflected + self.fuzz * random_in_unit_sphere()),
-        );
-        std::mem::replace(attenuation, self.albedo.clone());
+        let scattered = Ray::new(rec.point, reflected + self.fuzz * random_in_unit_sphere());
+        let attenuation = self.albedo;
 
-        scattered.direction().dot(&rec.normal) > 0.0
+        if scattered.direction().dot(&rec.normal) > 0.0 {
+            Some((attenuation, scattered))
+        } else {
+            None
+        }
     }
 }
 
@@ -214,11 +188,8 @@ impl Material for Dielectric {
     fn scatter(
         &self,
         r_in: &Ray,
-        rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut Ray,
-    ) -> bool {
-        std::mem::replace(attenuation, Color::new(1.0, 1.0, 1.0));
+        rec: &HitRecord
+    ) -> Option<(Color, Ray)> {
         let refraction_ratio = if rec.front_face {
             1.0 / self.ir
         } else {
@@ -240,8 +211,9 @@ impl Material for Dielectric {
             Vec3::refract(&unit_direction, &rec.normal, refraction_ratio)
         };
 
-        std::mem::replace(scattered, Ray::new(rec.point, direction));
-        true
+        let attenuation = Color::new(1.0, 1.0, 1.0);
+        let scattered = Ray::new(rec.point, direction);
+        Some((attenuation, scattered))
     }
 }
 
@@ -305,7 +277,7 @@ impl Camera {
 
     fn random_in_unit_disk() -> Vec3 {
         let mut rng = rand::thread_rng();
-        loop {  
+        loop {
             let p = Vec3::new(rng.gen_range(-1.0..1.0), rng.gen_range(-1.0..1.0), 0.0);
             if p.len_sqr() >= 1.0 {
                 continue;
@@ -354,14 +326,8 @@ impl Hittable for HittableList {
 }
 
 trait Material {
-    fn scatter(
-        &self,
-        r_in: &Ray,
-        rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut Ray,
-    ) -> bool {
-        false
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
+        None
     }
 }
 
@@ -393,12 +359,7 @@ fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
 
     let mut rec = HitRecord::default();
     if world.hit(r, 0.001, f64::INFINITY, &mut rec) {
-        let mut scattered = Ray::default();
-        let mut attenuation = Color::default();
-        if rec
-            .material
-            .scatter(r, &rec, &mut attenuation, &mut scattered)
-        {
+        if let Some((attenuation, scattered)) = rec.material.scatter(r, &rec) {
             return attenuation * ray_color(&scattered, world, depth - 1);
         }
         return Color::default();
@@ -406,7 +367,7 @@ fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
     let unit_direction = r.direction().unit();
     let t = 0.5 * (unit_direction.y() + 1.0);
 
-    (1.0 - t) * Color::new(1.0, 1.0, 1.0)  + t * Color::new(0.5, 0.7, 1.0)
+    (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
 }
 
 fn random_scene() -> HittableList {
@@ -484,7 +445,6 @@ fn random_scene() -> HittableList {
 }
 
 fn main() {
-
     // Image
     const ASPECT_RATIO: f64 = 3.0 / 2.0;
     const IMAGE_WIDTH: i32 = 1200;
@@ -515,7 +475,6 @@ fn main() {
     // Render
 
     std::io::stdout().write_fmt(format_args!("P3\n{} {}\n255\n", IMAGE_WIDTH, IMAGE_HEIGHT));
-
 
     let mut rng = rand::thread_rng();
     for j in (0..IMAGE_HEIGHT).rev() {

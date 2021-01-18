@@ -77,6 +77,20 @@ impl Vec3 {
         let r_out_parallel: Vec3 = -(1.0 - r_our_prep.len_sqr()).abs().sqrt() * n;
         r_our_prep + r_out_parallel
     }
+
+    pub fn random_in_unit_sphere() -> Self {
+        loop {
+            let p = Self::random_range(-1.0, 1.0);
+            if p.len_sqr() >= 1.0 {
+                continue;
+            }
+            return p;
+        }
+    }
+    
+    pub fn random_unit_vector() -> Self {
+        Self::random_in_unit_sphere().unit()
+    }
 }
 
 // ----- operators for Vec3  -----
