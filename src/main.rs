@@ -30,8 +30,8 @@ fn write_color(out: &mut dyn std::io::Write, pixel_color: Color, sample_per_pixe
     out.write_fmt(format_args!(
         "{} {} {}\n",
         (256.0 * clamp(r, 0.0, 0.999)) as i32,
-        (256.0 * clamp(r, 0.0, 0.999)) as i32,
-        (256.0 * clamp(r, 0.0, 0.999)) as i32,
+        (256.0 * clamp(g, 0.0, 0.999)) as i32,
+        (256.0 * clamp(b, 0.0, 0.999)) as i32,
     ));
 }
 
